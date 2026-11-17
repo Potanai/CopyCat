@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "CopyCat",
+  "version": "4.18.1",
+  "incognito": "spanning",
+  "description": "Copies chapters from a reader page into your Author studio 'Add chapter' form, one after another, with checks at every step.",
+  "permissions": ["storage", "tabs", "scripting", "power", "unlimitedStorage"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "CopyCat" },
+  "icons": { "128": "icon128.png" }
+}

@@ -1,0 +1,274 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>CopyCat</title>
+<style>
+ :root{color-scheme:dark;--bg:#07152d;--panel:#0d2142;--panel2:#10294f;--fg:#edf3ff;--muted:#a9bad5;--line:#29466f;--soft:#0b1d3a;--accent:#2864d7;--accent2:#1749a5;--gold:#e8bd62;--gold2:#f5d98e;--ok:#68d6a0;--err:#ff7c83;--warn:#f3c66d;--shadow:0 12px 30px #02081770}
+ *{box-sizing:border-box}
+ html{background:var(--bg);scroll-behavior:smooth}
+ body{margin:0;padding:18px 18px 24px;min-width:460px;font:13px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(ellipse at 90% 0%,#1b4380 0,transparent 36%),linear-gradient(155deg,#07152d 0%,#091a35 55%,#071329 100%);color:var(--fg)}
+ .brand{display:flex;align-items:center;gap:13px;padding:14px 15px;margin:0 0 15px;border:1px solid #42618b;border-radius:15px;background:linear-gradient(120deg,#102b55,#0b1d3b 68%,#152c50);box-shadow:var(--shadow);position:relative;overflow:hidden}
+ .brand:after{content:"";position:absolute;width:170px;height:170px;right:-50px;top:-95px;border:1px solid #e8bd6238;transform:rotate(45deg);box-shadow:0 0 0 12px #e8bd6208,0 0 0 25px #e8bd6206}
+ .gem{width:43px;height:43px;display:grid;place-items:center;flex:none;border-radius:12px;background:linear-gradient(145deg,#f7dda0,#c58c31);box-shadow:inset 0 1px #fff9,0 5px 16px #0005}
+ .gem svg{width:27px;height:27px;filter:drop-shadow(0 1px 1px #765018)}
+ .brand h1{font-size:17px;letter-spacing:.2px;margin:0;color:#fff;font-weight:750}
+ .brand .sub{font-size:11px;color:#c1cee3;margin-top:2px;letter-spacing:.45px}
+ .edition{margin-left:auto;z-index:1;border:1px solid #d9b45d88;border-radius:999px;padding:4px 8px;color:var(--gold2);font-size:10px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+ .box{border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:11px;background:linear-gradient(145deg,#102648ed,#0b1d39f2);box-shadow:0 5px 18px #02081735}
+ .box>b{display:flex;align-items:center;gap:8px;margin:0 0 9px;color:var(--gold2);font-size:12px;letter-spacing:.75px;text-transform:uppercase}
+ .box>b:before{content:"◆";font-size:9px;color:var(--gold)}
+ .row{display:flex;gap:7px;align-items:center;margin:7px 0;flex-wrap:wrap}
+ .row label{flex:1;min-width:150px;color:#dbe6f7}
+ .small{font-size:11px;color:var(--muted);line-height:1.5}
+ textarea,select,input[type=number],input[type=text],input[type=datetime-local]{background:#071832;color:var(--fg);border:1px solid #35527a;border-radius:7px;padding:7px 8px;outline:none;accent-color:var(--gold)}
+ textarea{width:100%;font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}
+ select{width:100%;min-height:32px}input[type=number]{width:82px}input[type=text]{min-width:120px}
+ textarea:focus,select:focus,input:focus{border-color:var(--gold);box-shadow:0 0 0 2px #e8bd6220}
+ input[type=checkbox]{width:15px;height:15px;accent-color:var(--gold);flex:none}
+ button{background:linear-gradient(180deg,#18365f,#102747);color:#eaf1ff;border:1px solid #3a5a84;border-radius:8px;padding:7px 10px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;line-height:1.3;transition:transform .12s,border-color .12s,filter .12s}
+ button:hover{border-color:var(--gold);filter:brightness(1.13);transform:translateY(-1px)}button:active{transform:translateY(0)}button:disabled{opacity:.42;cursor:not-allowed;transform:none}
+ button.main{background:linear-gradient(135deg,#e9c36e,#c9953e);border-color:#f3d68f;color:#14213a;font-weight:800;box-shadow:0 4px 14px #b9853030}
+ button.stop{background:linear-gradient(135deg,#bd394d,#8e263a);border-color:#df7180;color:white}
+ #status{margin:9px 0 6px;padding:8px 10px;border:1px solid #3a5a84;border-radius:8px;background:#0b1a33;color:#f3d58c;font-weight:700}
+ #bar{height:9px!important;border:1px solid #3b5273;background:#06152c!important;border-radius:99px!important;overflow:hidden;margin:7px 0!important}
+ #barfill{background:linear-gradient(90deg,#1e58c5,#e8bd62)!important;border-radius:99px}
+ #log{height:220px;overflow:auto;border:1px solid #29466f;border-radius:9px;padding:9px;background:#06152a;color:#c8d7ed;font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap}
+ #log .ok{color:var(--ok)}#log .err{color:var(--err);font-weight:700}#log .warn{color:var(--warn)}
+ #picked{padding-top:3px}#pub{color:#d8e5f8}
+ .box[style*="margin-top"]{border-color:#8c713d;background:linear-gradient(145deg,#172e50,#102340)}
+ .row:has(#start){padding:10px;border:1px solid #35527a;border-radius:11px;background:#0b1d39;position:sticky;bottom:7px;z-index:3;box-shadow:0 8px 24px #020817aa}
+ .row:has(#start) button{padding:9px 11px}
+ p.small{padding:8px 2px 0}
+ ::selection{background:#d7ad57;color:#08162d}
+
+ /* ---- premium buttons ---- */
+ button{position:relative;overflow:hidden;background:linear-gradient(180deg,#24487a 0%,#16325c 55%,#0f2547 100%);color:#f2f6ff;border:1px solid #4a6b99;border-radius:10px;padding:8px 13px;font-size:11.5px;font-weight:650;letter-spacing:.25px;box-shadow:inset 0 1px 0 #ffffff26,inset 0 -1px 0 #00000040,0 3px 10px #02081755;text-shadow:0 1px 1px #00000066;transition:transform .15s,box-shadow .2s,border-color .2s,filter .2s}
+ button:before{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,#ffffff30,transparent);transform:skewX(-20deg);transition:left .55s}
+ button:hover:not(:disabled){border-color:var(--gold);filter:brightness(1.12);transform:translateY(-1px);box-shadow:inset 0 1px 0 #ffffff33,0 6px 16px #02081780,0 0 0 1px #e8bd6240,0 0 14px #e8bd6228}
+ button:hover:not(:disabled):before{left:130%}
+ button:active:not(:disabled){transform:translateY(1px);box-shadow:inset 0 2px 5px #00000066}
+ button:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+ button.main{background:linear-gradient(180deg,#fbe4a4 0%,#e8bd62 45%,#b9812d 100%);border:1px solid #fbe7ae;color:#1a2540;text-shadow:0 1px 0 #ffffff66;font-weight:850;letter-spacing:.6px;box-shadow:inset 0 1px 0 #fffbe6,inset 0 -2px 0 #8a5d1a66,0 5px 18px #c9953e55}
+ button.main:hover:not(:disabled){box-shadow:inset 0 1px 0 #fffbe6,0 8px 22px #e8bd6270,0 0 18px #e8bd6255}
+ button.stop{background:linear-gradient(180deg,#d9566b 0%,#b13048 55%,#7f1f33 100%);border-color:#f08a99;color:#fff;box-shadow:inset 0 1px 0 #ffffff30,0 3px 12px #b1304855}
+ .row:has(#start){background:linear-gradient(145deg,#0f2447,#0a1a34);border-color:#6b5a2e}
+ /* ---- donation banner ---- */
+ .donate{display:flex;align-items:center;gap:12px;margin:0 0 12px;padding:10px 12px;border-radius:14px;text-decoration:none;color:#fff;border:1px solid #f3d68f;background:linear-gradient(120deg,#3b2a0c 0%,#7a561a 38%,#d9a944 100%);box-shadow:0 8px 24px #b9853044,inset 0 1px 0 #fff3c4aa;position:relative;overflow:hidden;transition:transform .15s,box-shadow .2s,filter .2s}
+ .donate:before{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,#ffffff55,transparent);transform:skewX(-20deg);animation:dshine 4.5s infinite}
+ @keyframes dshine{0%,60%{left:-60%}100%{left:140%}}
+ .donate:hover{transform:translateY(-1px);filter:brightness(1.08);box-shadow:0 12px 30px #e8bd6255,inset 0 1px 0 #fff3c4}
+ .d-ico{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:10px;font-size:20px;color:#3b2a0c;background:linear-gradient(145deg,#fff1c2,#e8bd62);box-shadow:inset 0 1px #fff,0 3px 10px #0005}
+ .d-txt{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+ .d-txt b{font-size:13px;color:#fff;text-shadow:0 1px 2px #0008}
+ .d-txt small{font-size:11px;color:#ffeab8;text-shadow:0 1px 2px #0008}
+ .d-btn{margin-left:auto;flex:none;padding:7px 14px;border-radius:999px;font-weight:850;font-size:11.5px;letter-spacing:.5px;color:#1a2540;background:linear-gradient(180deg,#fffaf0,#f5d98e);border:1px solid #fff3c4;box-shadow:0 3px 10px #0005}
+
+ /* ---- modes + wizard ---- */
+ body.planday .plan-adv{display:none} body.planevery .plan-day{display:none}
+ .paste-only{display:none} body.paste .paste-only{display:block} body.paste .src-only{display:none}
+ .wiz{border-color:#6b5a2e;background:linear-gradient(145deg,#10264a,#0a1a34)}
+ .wizstep{font-size:10.5px;letter-spacing:.8px;color:var(--gold2);font-weight:800;margin-top:6px}
+ .wiztitle{font-size:14px;font-weight:800;margin:2px 0 4px}
+ .wizbar{height:5px;border-radius:5px;background:#ffffff14;margin:6px 0 4px;overflow:hidden}
+ .wizbar i{display:block;height:100%;background:linear-gradient(90deg,#e8bd62,#fbe4a4);width:0;transition:width .3s}
+ .ok-t{color:#7be39a;font-weight:700}.todo-t{color:#ffcf7a}
+ #pasteText{min-height:130px;width:100%;box-sizing:border-box;font-family:inherit}
+
+ /* ---- collapsible sections, guide, schedule preview ---- */
+ details.box>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--gold2);font-size:12px;font-weight:700;letter-spacing:.75px;text-transform:uppercase;user-select:none}
+ details.box>summary::-webkit-details-marker,details.sub>summary::-webkit-details-marker{display:none}
+ details.box>summary:before{content:"▸";font-size:11px;color:var(--gold);transition:transform .15s;width:10px}
+ details.box[open]>summary:before{transform:rotate(90deg)}
+ details.box>summary:hover{color:#fff}
+ details.box[open]>summary{margin-bottom:9px}
+ details.sub{border:1px dashed #35527a;border-radius:9px;padding:7px 10px;margin:9px 0 3px;background:#0a1b36}
+ details.sub>summary{cursor:pointer;color:#cfe0fa;font-size:11.5px;font-weight:650;list-style:none}
+ details.sub>summary:before{content:"＋ ";color:var(--gold)}details.sub[open]>summary:before{content:"－ "}
+ details.sub[open]>summary{margin-bottom:6px}
+ body.simple .adv{display:none!important}
+ body.easy .noteasy{display:none!important}
+ #helpBox{display:none;margin:8px 0;padding:10px 12px;border:1px solid #b9853a;border-radius:10px;background:#2a2212;color:#ffe9b0;font-size:12.5px}
+ #helpBox b{color:#fff}
+ #helpBox ul{margin:6px 0 0 18px;padding:0}
+ input[type=text],input[type=number],input[type=datetime-local]{background:#071832;color:var(--fg)}
+ .nextstep{margin:6px 0 8px;padding:9px 11px;border-radius:9px;border:1px solid #6b5a2e;background:#14284a;color:#ffe9b0;font-weight:700;font-size:12.5px}
+ .nextstep.good{border-color:#3f9a6c;color:#9df0c2}
+ .guidelist{margin:0 0 8px;padding:0;list-style:none}
+ .guidelist li{display:flex;gap:9px;align-items:flex-start;padding:4px 0;color:#dbe6f7;font-size:12px}
+ .guidelist .st{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;background:#1b3558;color:#a9bad5;border:1px solid #35527a}
+ .guidelist li.done .st{background:#2f8a5e;color:#fff;border-color:#5fd49b}
+ .guidelist li.opt .st{border-style:dashed}
+ .guidelist li small{display:block;color:var(--muted);font-size:11px}
+ .schedcard{border:1px solid #35527a;border-radius:10px;padding:6px 10px;margin:8px 0;background:#0a1b36}
+ .preview{border:1px solid #6b5a2e;border-radius:10px;padding:8px 11px;margin:8px 0;background:#10264a}
+ .preview .ptitle{font-weight:800;color:var(--gold2);margin-bottom:4px}
+ #schedPreview div{padding:1px 0;color:#e4edfb;font-size:12px}
+ #schedPreview .pw{color:#ffcf7a}#schedPreview .pe{color:var(--err);font-weight:700}#schedPreview .po{color:var(--ok)}
+ .row:has(#start){flex-wrap:wrap}
+ .steprow{display:flex;gap:5px;align-items:center;flex-wrap:wrap;padding:4px 0;border-bottom:1px solid #1d3558}.steprow .small{flex:1;min-width:200px}.steprow button{padding:3px 8px}
+ @media(max-width:520px){body{padding:12px;min-width:0}.brand{padding:11px}.edition{font-size:9px}.row label{min-width:130px}}
+</style></head><body>
+<a class="donate" href="https://www.patreon.com/DarkDonkey/gift" target="_blank" rel="noopener noreferrer" title="Support the developer on Patreon">
+ <span class="d-ico" aria-hidden="true">♛</span>
+ <span class="d-txt"><b>Enjoying CopyCat?</b><small>Support the developer with a Patreon gift</small></span>
+ <span class="d-btn">Donate ♥</span>
+</a>
+<header class="brand">
+ <div class="gem" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M5 11.5 10 5h12l5 6.5L16 27 5 11.5Z" fill="#17458f" stroke="#fff0c7" stroke-width="1.4"/><path d="M5 11.5h22M10 5l6 22L22 5M10 5l-5 6.5M22 5l5 6.5" stroke="#f8dda0" stroke-width="1.2"/><path d="m10 5 6 6.5L22 5" stroke="#fff4d4" stroke-width="1.2"/></svg></div>
+ <div><h1>CopyCat</h1><div class="sub">PRECISION PUBLISHING WORKSPACE · v4.18.1</div></div>
+ <div class="edition">ROYAL EDITION</div>
+</header>
+
+<details class="box guide" id="d_guide" open><summary>📘 Quick guide – what to do</summary><div class="inner">
+ <div class="row"><label for="viewMode">How many options do you want to see?</label><select id="viewMode"><option value="easy">Easy – the bare minimum, step by step (recommended)</option><option value="simple">Simple – most settings</option><option value="all">All options – every setting</option></select></div>
+ <div id="guideNext" class="nextstep"></div>
+ <ol id="guideList" class="guidelist"></ol>
+ <div class="small">Tip: open the reader and your site’s “Add chapter” form in <b>two normal browser windows</b>, side by side. Click a title below to open or close a section.</div>
+</div></details>
+
+<details class="box noteasy" id="d_mode" open><summary>Mode – where do the chapters come from?</summary><div class="inner">
+ <div class="row"><select id="mode"><option value="copy">Copy chapters from another website (source tab → target tab)</option><option value="paste">Paste my own chapters (text or .txt file → target tab)</option></select></div>
+ <div class="small">Both modes use the same Target, Save &amp; schedule, Speed and Text settings below.</div></div></details>
+
+<details class="box wiz adv" id="d_wiz"><summary>★ Other websites – step-by-step setup (advanced)</summary><div class="inner">
+ <div class="small">Only needed for a website the tool does not understand yet. Each pick is remembered for that website. Skip what auto-detect already finds – “Test target” shows what it found.</div>
+ <div id="wizStep" class="wizstep"></div><div class="wizbar"><i id="wizFill"></i></div>
+ <div id="wizTitle" class="wiztitle"></div><div id="wizText" class="small"></div><div id="wizState" class="small"></div>
+ <div class="row"><button id="wizBack">← Back</button><button id="wizPick" class="main">Pick it</button><button id="wizSkip">Skip</button><button id="wizNext">Next →</button></div></div></details>
+
+<details class="box paste-only" id="d_paste" open><summary>1. Your chapters – paste text or load a file</summary><div class="inner">
+ <div class="row"><label for="pasteFile">Load a .txt / .md file</label><input id="pasteFile" type="file" accept=".txt,.md,.text"></div>
+ <textarea id="pasteText" placeholder="Paste one or many chapters here…&#10;&#10;Chapter 1: The Beginning&#10;First paragraph…&#10;&#10;Chapter 2: Next&#10;…"></textarea>
+ <div class="row"><label for="splitBy">Where does each chapter start?</label><select id="splitBy"><option value="heading">At lines like “Chapter 12: Title”</option><option value="separator">After a separator line (--- or === or ***); first line = title</option><option value="marker">After my own marker line (type it below); first line = title</option><option value="single">It is ONE chapter (first line = title)</option></select></div>
+ <div class="row"><label for="splitMarker">My marker line</label><input id="splitMarker" type="text" placeholder="e.g. ###NEXT" style="min-width:140px"></div>
+ <div class="row"><label for="pasteStartNo">Number for the first chapter that has no number</label><input id="pasteStartNo" type="number" min="0" value="1"></div>
+ <div class="row"><label for="pasteFrom">Start at the N-th chapter of the list</label><input id="pasteFrom" type="number" min="1" value="1"><label for="pasteCount">How many (blank = all)</label><input id="pasteCount" type="number" min="1"></div>
+ <div class="row"><label for="pasteBook">Book name (only to remember what was already posted)</label><input id="pasteBook" type="text" style="min-width:140px"></div>
+ <div class="row"><button id="pastePreview">Preview split</button></div><div id="pasteInfo" class="small"></div></div></details>
+
+<details class="box src-only" id="d_src" open><summary>1. Source – the reader page</summary><div class="inner">
+ <div class="small">Choose the browser tab that shows the chapter you want to copy.</div>
+ <select id="srcTab"></select>
+ <div class="row"><button id="testSrc">Test reading</button><button id="refresh2" type="button">↻ Refresh tab list</button></div>
+ <details class="sub adv" id="d_srcpick"><summary>Fix what “Test reading” misses (pick parts by hand)</summary><div class="inner">
+  <div class="small">Press a button, then click that part on the reader page.</div>
+  <div class="row"><button id="pickContent">Pick TEXT</button><button id="pickTitle">Pick TITLE</button><button id="pickNext">Pick NEXT</button><button id="forget">Forget picks</button></div></div></details>
+ <div id="picked" class="small"></div>
+ <div class="row"><span id="lastInfo" class="small"></span><button id="continueLast" title="Fills From with the chapter after the last one this tool published for this novel">Continue after last published</button><button id="forgetLast" class="adv">Forget list</button><button id="forgetBook" class="adv" title="Deletes only the saved text copies">Delete saved copies</button></div></div></details>
+
+<details class="box" id="d_tgt" open><summary>2. Target – the “Add a new chapter” page</summary><div class="inner">
+ <div class="small">Choose the browser tab with your site’s “Add a new chapter” form (or your story page with the “New Chapter” button).</div>
+ <select id="tgtTab"></select>
+ <div class="row adv"><label for="tgtProfile">Website type</label><select id="tgtProfile"><option value="auto">Auto-detect (Author studio style)</option><option value="royalroad">Royal Road</option><option value="webnovel">Webnovel</option><option value="custom">Any other website (use my picks)</option></select></div>
+ <div class="row"><button id="testTgt">Test target</button><button id="refresh" type="button">↻ Refresh tab list</button><button id="siteReset" type="button" title="Forgets every pick, button name and extra step saved for this website">🧹 Start clean for this website</button></div>
+ <details class="sub adv" id="d_incog"><summary>Private (incognito) windows</summary><div class="inner">
+  <div class="row"><button id="incoOpen" title="Opens this extension's settings page">🕶 Use private tabs…</button><button id="incoWin" title="Chrome only lets a private page be controlled from a private window">🕶 Open this tool in a PRIVATE window</button></div>
+  <div id="incoInfo" class="small"></div></div></details>
+ <details class="sub adv" id="d_tgtpick"><summary>Fix what “Test target” misses (pick parts by hand)</summary><div class="inner">
+  <div class="small">Press a button, then click that part on the website. Picks are remembered for that website.</div>
+  <div class="row"><button id="tpEditor">Pick TEXT editor</button><button id="tpTitle">Pick NAME box</button><button id="tpPublish">Pick PUBLISH</button><button id="tpDraft">Pick DRAFT</button><button id="tpSchedule">Pick SCHEDULE</button><button id="tpDate">Pick DATE box</button><button id="tpTime">Pick TIME box</button><button id="tpForget">Forget picks</button></div></div></details>
+
+ <details class="sub" id="d_steps"><summary>Extra buttons to click – Next, Back, Confirm, “click here”… (for any author website)</summary><div class="inner">
+  <div class="small">Auto-detect handles most sites. If your website needs more clicks, add them here as steps. They run in order, for every chapter. Each step finds its button by the text you type, or by the button you pick on the page.</div>
+  <div class="row"><label for="stepWhen">When should it click?</label><select id="stepWhen"><option value="before">Before filling each chapter (e.g. “New Chapter”, “click here”)</option><option value="beforePublish">After filling, before Publish (e.g. Next, Continue, I agree)</option><option value="afterClick">Right after pressing Publish (e.g. Confirm, Yes, OK window)</option><option value="afterPublish">After publishing (e.g. Back, Add another, Close)</option></select></div>
+  <div class="row"><label for="stepText">Button text <span class="small">(several allowed: Next | Continue)</span></label><input id="stepText" type="text" placeholder="Next" style="min-width:150px"></div>
+  <div class="row"><button id="stepPick" type="button">…or pick the button on the page</button><span id="stepPicked" class="small"></span></div>
+  <div class="row"><label for="stepWait">Then wait (seconds)</label><input id="stepWait" type="number" min="0" step="0.5" value="1"><input id="stepOpt" type="checkbox" checked><label for="stepOpt" style="flex:none;min-width:0">skip it if the button is not there</label></div>
+  <div class="row"><input id="stepAlways" type="checkbox"><label for="stepAlways">Run it every chapter, even if a form is already showing <span class="small">(tick for “New Chapter +” on sites whose editor always shows an old chapter)</span></label></div>
+  <div class="row"><button id="stepAdd" class="main" type="button">＋ Add this step</button></div>
+  <div id="stepList"></div>
+  <div class="small">This website’s own names for the main buttons – only if auto-detect misses them (several allowed with | ):</div>
+  <div class="row"><label for="txtPublish">Publish button</label><input id="txtPublish" type="text" placeholder="e.g. Post chapter" style="min-width:150px"></div>
+  <div class="row"><label for="txtDraft">Save-as-draft button</label><input id="txtDraft" type="text" placeholder="e.g. Keep as draft" style="min-width:150px"></div>
+  <div class="row"><label for="txtSchedule">Schedule button</label><input id="txtSchedule" type="text" placeholder="e.g. Set release" style="min-width:150px"></div>
+  <div class="row"><button id="siteCopy" type="button">📋 Copy this website’s settings (to share)</button><button id="siteLoad" type="button">📥 Load settings someone shared</button></div>
+  <div class="small">Sharing: once it works for your website, copy the settings and send them to others. They press “Load settings” while their Target tab is on that website.</div>
+ </div></details>
+ <div id="presetInfo" class="small ok-t"></div>
+ <div id="tpicked" class="small"></div></div></details>
+
+<details class="box src-only" id="d_range" open><summary>3. Which chapters?</summary><div class="inner">
+ <div class="row"><label for="from">Start at chapter number <span class="small">(blank = the chapter on screen)</span></label><input id="from" type="number" min="1" placeholder="e.g. 14"><button id="useReader" type="button">Use reader’s chapter</button></div>
+ <div class="row"><label for="to">Last chapter to copy <span class="small">(blank = no limit)</span></label><input id="to" type="number" min="1" placeholder="e.g. 40"></div>
+ <div class="row"><label for="max">…or: how many chapters <span class="small">(0 = until the end)</span></label><input id="max" type="number" min="0" value="0"></div>
+ <div class="small" id="rangeHint"></div>
+ <details class="sub adv" id="d_range2"><summary>More range options</summary><div class="inner">
+  <div class="row"><input id="forceFollow" type="checkbox"><label for="forceFollow">This reader has no chapter numbers in its address (Royal Road, Webnovel and most sites): start at the chapter on screen and follow its Next button. (Chosen automatically for Royal Road and Webnovel.)</label></div>
+  <div class="row"><label for="numMode">The numbers I type are</label><select id="numMode"><option value="address">the chapter number in the browser address / reader (chapter-10)</option><option value="title">the number in the chapter’s title on the page</option></select></div>
+  <div class="row"><label for="maxMinutes">Stop after running for … minutes (0 = no limit)</label><input id="maxMinutes" type="number" min="0" value="0"></div>
+  <div class="row"><label for="skipNums">Skip these chapters (e.g. 45, 60-62)</label><input id="skipNums" type="text" style="flex:1;min-width:120px"></div>
+  <div class="small">Stop BEFORE any chapter that contains one of these words/phrases (one per line, e.g. “Volume 2”, “To be continued”):</div>
+  <textarea id="stopWords" rows="2" placeholder="Volume 2"></textarea></div></details>
+ <details class="sub adv" id="d_coin"><summary>Coin price (paid chapters)</summary><div class="inner">
+  <div class="row"><label for="coinFrom">Coins start from chapter (the number in the title)</label><input id="coinFrom" type="number" min="1" value="31"></div>
+  <div class="row"><label for="coin">Coin price for those chapters (blank = leave the site's value)</label><input id="coin" type="number" min="0" max="100"></div>
+  <div class="small">Different prices for different stretches (optional, one per line: <b>from chapter =&gt; price</b>). If filled, it replaces the two boxes above. Example: 31 =&gt; 5 / 100 =&gt; 8 / 300 =&gt; 10</div>
+  <textarea id="coinRules" rows="2" placeholder="31 =&gt; 5&#10;100 =&gt; 8"></textarea></div></details>
+</div></details>
+
+<details class="box" id="d_sched" open><summary>4. What happens to each chapter? (publish / schedule)</summary><div class="inner">
+ <div class="row"><label for="saveMode">Choose one</label><select id="saveMode"><option value="publish">Publish right away</option><option value="draft">Save as draft – nothing goes public</option><option value="site">Schedule on the website – the site publishes at the times I set</option><option value="timer">Publish later with this tool – this window and computer must stay on</option></select></div>
+ <div class="small" id="saveHint"></div>
+ <div id="schedFields">
+  <div class="schedcard">
+   <div class="row"><label for="schedStart">When should the FIRST scheduled chapter come out? <span class="small">(blank = about 10 minutes from now)</span></label><input id="schedStart" type="datetime-local"></div>
+   <div class="row"><label for="schedPlan">How are releases spaced?</label><select id="schedPlan"><option value="perday">A few chapters every day, at set times</option><option value="every">One batch every X minutes / hours / days</option></select></div>
+   <div class="row plan-day"><label for="perDay">Chapters per day</label><input id="perDay" type="number" min="1" max="48" value="1"></div>
+   <div class="row plan-day"><label for="perDayTimes">At these times <span class="small">(optional, e.g. 09:00, 21:00 – blank = spread evenly through the day)</span></label><input id="perDayTimes" type="text" placeholder="09:00, 21:00" style="min-width:150px"></div>
+   <div class="row plan-adv"><label for="schedBatch">Chapters released together</label><input id="schedBatch" type="number" min="1" value="1"></div>
+   <div class="row plan-adv"><label for="schedEvery">Then the next batch after</label><input id="schedEvery" type="number" min="0" step="any" value="1"><select id="schedUnit" style="width:auto"><option value="60000">minutes</option><option value="3600000">hours</option><option value="86400000" selected>days</option></select></div>
+   <div class="row"><label for="nowCount">Publish the first … chapters right away <span class="small">(0 = schedule every chapter)</span></label><input id="nowCount" type="number" min="0" value="0"></div>
+  </div>
+  <div class="preview"><div class="ptitle">📅 Release preview <span class="small">(updates as you type)</span></div><div id="schedPreview"></div></div>
+  <details class="sub adv" id="d_datefmt"><summary>Only for websites with a typed date box</summary><div class="inner">
+   <div class="row"><label for="dateFmt">Date format / time format</label><input id="dateFmt" type="text" value="YYYY-MM-DD" style="min-width:100px;width:110px"><input id="timeFmt" type="text" value="HH:mm" style="min-width:70px;width:80px"></div></div></details>
+ </div>
+</div></details>
+
+<details class="box noteasy" id="d_speed"><summary>5. Speed &amp; safety</summary><div class="inner">
+ <div class="row"><label for="speed">Speed</label><select id="speed"><option value="max">🚀 MAX – no pauses, shortest waits (fast connection only)</option><option value="turbo">⚡ Turbo – fastest possible (needs a quick connection)</option><option value="fast">Fast – shortest safe waits (recommended)</option><option value="normal">Normal</option><option value="safe">Gentle – the slow, extra-careful waits</option></select></div>
+ <div class="row"><label for="onBlock">If the source shows a security check, a login wall or a locked chapter</label><select id="onBlock"><option value="wait">Pause here, wait for me, then continue by itself</option><option value="stop">Stop the run here</option></select></div>
+ <div class="row"><input id="autoTxt" type="checkbox" checked><label for="autoTxt">When a run finishes or stops, download a .txt file of the chapters it copied</label></div>
+ <details class="sub adv" id="d_speed2"><summary>More speed &amp; safety options</summary><div class="inner">
+  <div class="row"><label for="blockMinutes">How long to wait for me at a security check (minutes)</label><input id="blockMinutes" type="number" min="1" value="30"></div>
+  <div class="small">Verification pages (Cloudflare, reCAPTCHA…) are never solved or bypassed by this tool – it brings the source tab forward and waits while you solve it yourself. If you solved it in another tab, press “I solved it – continue”.</div>
+  <div class="row"><input id="pipeline" type="checkbox" checked><label for="pipeline">Read the next chapter while the current one is being published (noticeably faster)</label></div>
+  <div class="row"><label for="delay">Pause between chapters (seconds)</label><input id="delay" type="number" min="0" step="0.1" value="1"></div>
+  <div class="row"><input id="jitter" type="checkbox"><label for="jitter">Vary the pause randomly (looks less robotic)</label></div>
+  <div class="row"><label for="retries">Retry a failed chapter up to</label><input id="retries" type="number" min="0" max="5" value="2"><span class="small">times</span></div>
+  <div class="row"><input id="patient" type="checkbox"><label for="patient">Keep going when stuck: wait, restore windows and retry every minute (up to 30 min) instead of stopping</label></div>
+  <div class="row"><input id="skipFailed" type="checkbox"><label for="skipFailed">If a chapter still fails, skip it, carry on, and list it at the end</label></div>
+  <div class="row"><input id="skipDone" type="checkbox"><label for="skipDone">Skip chapters this tool already published earlier (from its saved list)</label></div>
+  <div class="row"><input id="autoRestore" type="checkbox" checked><label for="autoRestore">If the reader / Author studio window gets minimized, bring it back without taking focus</label></div>
+  <div class="row"><input id="alertOn" type="checkbox" checked><label for="alertOn">Beep and flash this window when I must act (verification page)</label></div></div></details>
+</div></details>
+
+<details class="box adv" id="d_text"><summary>6. Text &amp; title (optional clean-up)</summary><div class="inner">
+ <div class="row"><label for="titleMode">Post each chapter titled</label><select id="titleMode"><option value="address">“Chapter {browser number}: name” – matches what I see</option><option value="site">exactly as the website titles it</option></select></div>
+ <div class="row"><label for="titleStart">Or number titles myself: first chapter becomes “Chapter …” (blank = use the choice above)</label><input id="titleStart" type="number" min="0" placeholder="keep"></div>
+ <div class="row"><label for="titleTpl">Title template (blank = normal). Use {n} for the number and {name} for the name</label><input id="titleTpl" type="text" placeholder="Chapter {n} – {name}" style="flex:1;min-width:160px"></div>
+ <div class="row"><label for="prepend">Add this line at the START of every chapter</label><input id="prepend" type="text" style="flex:1;min-width:160px"></div>
+ <div class="row"><label for="append">Add this line at the END of every chapter</label><input id="append" type="text" style="flex:1;min-width:160px"></div>
+ <div class="small">Delete any paragraph containing these words/phrases (one per line):</div>
+ <textarea id="dropLines" rows="3" placeholder="wtr-lab&#10;read at …"></textarea>
+ <div class="small">Replace text (one per line, written as  find =&gt; replace):</div>
+ <textarea id="repl" rows="2" placeholder="Wtr-lab =&gt; &#10;MC =&gt; Lin Yue"></textarea>
+</div></details>
+
+<details class="box" id="d_final" open><summary>7. Before you start</summary><div class="inner">
+ <div class="row"><input id="confirmFirst" type="checkbox" checked><label for="confirmFirst">Show me the first chapter (address, title, first words) and ask before publishing it</label></div>
+ <div class="row"><input id="attest" type="checkbox"><label for="attest"><b>I have the right to publish this novel.</b> (required)</label></div>
+ <details class="sub adv" id="d_final2"><summary>More</summary><div class="inner">
+  <div class="row"><input id="review" type="checkbox"><label for="review">Review first: fill the form but do NOT publish (the website still autosaves it as a draft)</label></div>
+  <div class="row"><input id="skipFirst" type="checkbox"><label for="skipFirst">Current chapter is already posted – start from the next one</label></div>
+  <div class="row"><input id="allowGaps" type="checkbox"><label for="allowGaps">(follow-the-page mode only) allow gaps in chapter numbers</label></div></div></details>
+</div></details>
+
+<div class="row"><button id="start" class="main">▶ Start</button><button id="pause" disabled>⏸ Pause after this chapter</button><button id="stop" class="stop" disabled>■ Stop</button><button id="resumeBtn" class="main" style="display:none" title="Press after you solved the verification">▶ I solved it – continue</button><button id="copyLog">Copy log</button><button id="download" title="One .txt file with every chapter this tool has saved for the novel in the SOURCE tab">⬇ Download chapters (.txt)</button><button id="report">⬇ Report (CSV)</button><button id="deleteAll" title="Deletes the remembered tabs, options, picks and last published chapters">🗑 Delete saved data</button></div>
+<div id="status"></div>
+<div id="helpBox"></div>
+<div id="bar" style="height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin:4px 0"><div id="barfill" style="height:100%;width:0;background:var(--accent)"></div></div>
+<div id="eta" class="small"></div>
+<div id="now" class="small"></div>
+<div class="box" style="margin-top:8px"><b>Published in this run</b><div id="pub" class="small">nothing yet</div></div>
+<div id="log"></div>
+<p class="small">Keep this window open while it runs. Put the source and target tabs in two separate windows, side by side, so neither is hidden.</p>
+<script src="core.js"></script><script src="presets.js"></script><script src="runner.js"></script></body></html>

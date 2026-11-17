@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo — Verify you are human</title>
+<style>
+  :root { color-scheme: dark; font: 16px/1.5 system-ui, sans-serif; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(ellipse at 80% 0%, #1b4380 0, transparent 40%), #07152d; color: #edf3ff; }
+  main { width: min(440px, calc(100% - 40px)); padding: 28px; border: 1px solid #42618b; border-radius: 16px; background: linear-gradient(145deg,#102648,#0b1d39); box-shadow: 0 18px 44px #02081788; }
+  h1 { margin: 0 0 8px; font-size: 1.35rem; }
+  p { color: #a9bad5; }
+  .check { display: flex; align-items: center; gap: 12px; padding: 16px; margin: 22px 0; border: 1px solid #45638a; border-radius: 10px; background:#071832; }
+  input { width: 22px; height: 22px; }
+  button { border: 0; border-radius: 8px; padding: 10px 14px; margin: 4px 6px 4px 0; background: linear-gradient(135deg,#e9c36e,#c9953e); color:#14213a; color: white; cursor: pointer; }
+  button.secondary { background: #18365f; color: #eaf1ff; border:1px solid #3a5a84; }
+  #status { min-height: 26px; font-weight: 600; }
+  .ok { color: #68d6a0; }
+  .note { font-size: .88rem; border-top: 1px solid #29466f; padding-top: 14px; }
+</style>
+</head>
+<body>
+<main id="challenge" data-cc-demo-verification="pending">
+  <h1>Verify you are human</h1>
+  <p>This is a local test challenge for CopyCat. It does not contact or solve any real CAPTCHA service.</p>
+  <label class="check"><input id="human" type="checkbox"><span>I'm not a robot</span></label>
+  <div>
+    <button id="manual">Verify checkbox</button>
+    <button id="auto" class="secondary">Simulate automatic demo verification</button>
+    <button id="reset" class="secondary">Reset demo</button>
+  </div>
+  <p id="status" role="status" aria-live="polite">Waiting for demo verification…</p>
+  <p class="note">Testing: load this file in a browser tab, then use that tab as the CopyCat source. The extension should detect the pending demo challenge and wait. Once verified, the challenge marker disappears.</p>
+</main>
+<script>
+(() => {
+  const panel = document.getElementById('challenge');
+  const checkbox = document.getElementById('human');
+  const status = document.getElementById('status');
+  let timer;
+  function verified(method) {
+    clearTimeout(timer);
+    checkbox.checked = true;
+    panel.removeAttribute('data-cc-demo-verification');
+    document.title = 'Demo — Verification complete';
+    status.textContent = 'Demo verified (' + method + '). CopyCat can continue.';
+    status.className = 'ok';
+  }
+  document.getElementById('manual').addEventListener('click', () => {
+    if (checkbox.checked) verified('manual checkbox');
+    else status.textContent = 'Please check the box first.';
+  });
+  document.getElementById('auto').addEventListener('click', () => {
+    status.textContent = 'Simulating the demo verifier…';
+    timer = setTimeout(() => {
+      // This is a real click on the checkbox in this local demo page.
+      checkbox.click();
+      if (checkbox.checked) verified('automatic demo checkbox click');
+      else status.textContent = 'Demo checkbox click did not register. Try again.';
+    }, 900);
+  });
+  document.getElementById('reset').addEventListener('click', () => {
+    clearTimeout(timer);
+    checkbox.checked = false;
+    panel.setAttribute('data-cc-demo-verification', 'pending');
+    document.title = 'Demo — Verify you are human';
+    status.textContent = 'Waiting for demo verification…';
+    status.className = '';
+  });
+})();
+</script>
+</body>
+</html>
